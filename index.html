@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Tasks CRUD</title>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2.6.14/dist/vue.js"></script>
+  <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+  <link rel="stylesheet" href="style2.css">
+</head>
+<body>
+  <div id="app">
+    <h1>Tasks CRUD</h1>
+
+    <form @submit.prevent="addTask">
+      <input type="text" v-model="newTaskTitle" placeholder="Digite o título da task" required>
+      <button type="submit">Adicionar Nova Task</button>
+    </form>
+
+    <ul>
+      <li v-for="task in tasks" :key="task.id">
+        {{ task.title }}
+        <button @click="updateTask(task)">Atualizar</button>
+        <button @click="removeTask(task.id)">Remover</button>
+      </li>
+    </ul>
+  </div>
+
+  <script>
+    new Vue({
+      el: "#app",
+      data: {
+        tasks: [],
+        newTaskTitle: ""
+      },
+      created() {
+        this.loadTasks();
+      },
+      methods: {
+        loadTasks() {
+          axios.get('http://localhost:3000/tasks')
+            .then(response => {
+              this.tasks = response.data;
+            })
+            .catch(error => {
+              console.error('Erro ao carregar as tarefas:', error);
+            });
+        },
+        addTask() {
+          axios.post('http://localhost:3000/tasks', { title: this.newTaskTitle })
+            .then(response => {
+              const newTask = response.data;
+              this.tasks.push(newTask);
+              this.newTaskTitle = "";
+            })
+            .catch(error => {
+              console.error('Erro ao adicionar a task:', error);
+            });
+        },
+        removeTask(taskId) {
+          axios.delete(`http://localhost:3000/tasks/${taskId}`)
+            .then(response => {
+              const { message } = response.data;
+              console.log(message);
+              this.loadTasks();
+            })
+            .catch(error => {
+              console.error('Erro ao remover tarefa:', error);
+            });
+        },
+        updateTask(task) {
+          const newTitle = prompt('Digite o novo nome da task:');
+          axios.put(`http://localhost:3000/tasks/${task.id}`, { title: newTitle })
+            .then(response => {
+              const updatedTask = response.data;
+              console.log('Task atualizada:', updatedTask);
+              this.loadTasks();
+            })
+            .catch(error => {
+              console.error('Erro ao atualizar task:', error);
+            });
+        }
+      }
+    });
+  </script>
+</body>
+</html>
